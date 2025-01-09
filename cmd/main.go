@@ -1,29 +1,38 @@
 package main
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/steyrin/mini-rest-api/config"
+	"github.com/steyrin/mini-rest-api/internal/handler"
+	"github.com/steyrin/mini-rest-api/internal/repository"
+	"github.com/steyrin/mini-rest-api/internal/service"
+	"log"
 )
 
 func main() {
 	db := config.InitDB()
-	defer db.Close()
 
-	router := gin.Default()
+	bookRepo := repository.NewBookRepository(db)
 
-	logrus.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp: true,
-	})
+	bookService := service.NewBookService(bookRepo)
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Добро пожаловать в REST API!",
-		})
-	})
+	r := gin.Default()
 
-	logrus.Info("Сервер запущен на порту 8080")
-	if err := router.Run(":8080"); err != nil {
-		logrus.Fatalf("Не удалось запустить сервер: %v", err)
+	err := repository.InitializeBooks(db, context.Background())
+	if err != nil {
+		log.Fatalf("Ошибка при инициализации книг: %v", err)
+	}
+
+	handler.NewBookHandler(r, bookService)
+
+	//router.GET("/", func(c *gin.Context) {
+	//	c.JSON(200, gin.H{
+	//		"message": "Test!",
+	//	})
+	//})
+
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("Ошибка при запуске сервера: %v", err)
 	}
 }
