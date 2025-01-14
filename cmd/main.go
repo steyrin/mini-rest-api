@@ -7,10 +7,19 @@ import (
 	"github.com/steyrin/mini-rest-api/internal/handler"
 	"github.com/steyrin/mini-rest-api/internal/repository"
 	"github.com/steyrin/mini-rest-api/internal/service"
+	"github.com/steyrin/mini-rest-api/internal/tracer"
 	"log"
 )
 
 func main() {
+
+	shutdown := tracer.InitTracer(false)
+	defer func() {
+		if err := shutdown(context.Background()); err != nil {
+			log.Fatalf("Error shutting down tracer: %v", err)
+		}
+	}()
+
 	db := config.InitDB()
 
 	bookRepo := repository.NewBookRepository(db)
