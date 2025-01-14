@@ -1,0 +1,7 @@
+output: ./mocks
+packages:
+  service:
+    - BookService
+  repository:
+    - BookRepository
+issue-845-fix: true
